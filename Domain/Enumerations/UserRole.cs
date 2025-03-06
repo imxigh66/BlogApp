@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Domain.Enumerations
 {
-    internal class UserRole
+    public enum UserRole
     {
+        Admin,    // Полный контроль
+        Author,   // Пишет статьи
+        
     }
 }

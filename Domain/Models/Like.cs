@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace Domain.Models
 {
-    internal class Like
+    public class Like
     {
+        public int Id { get; set; }
+        public int ArticleId { get; set; }
+        public string UserIdentifier { get; set; } // Храним ID пользователя или GuestID
+        public DateTime LikedAt { get; set; } = DateTime.UtcNow;
     }
+
 }
