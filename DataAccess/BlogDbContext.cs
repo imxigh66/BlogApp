@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using DataAccess.Configurations;
+using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -16,5 +17,19 @@ namespace DataAccess
         }
 
         public DbSet<Post> Posts { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<Article> Articles { get; set; }
+        public DbSet<Like> Likes { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(BlogDbContext).Assembly);
+        }
+
+
     }
 }
