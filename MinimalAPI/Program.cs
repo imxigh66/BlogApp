@@ -24,6 +24,10 @@ app.Use(async (ctx, next) =>
 
 });
 
+app.UseDeveloperExceptionPage(); // Показывает ошибки в ответах
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHttpsRedirection();
 

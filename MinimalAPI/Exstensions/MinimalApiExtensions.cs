@@ -4,6 +4,9 @@ using DataAccess.Repositories;
 using DataAccess;
 using Microsoft.EntityFrameworkCore;
 using MinimalAPI.Abstractions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace MinimalAPI.Exstensions
 {
@@ -14,8 +17,53 @@ namespace MinimalAPI.Exstensions
         {
             var cs = builder.Configuration.GetConnectionString("Default");
             builder.Services.AddDbContext<BlogDbContext>(opt => opt.UseSqlServer(cs));
+
+
             builder.Services.AddScoped<IPostRepository, PostRepository>();
+            builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+            builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+            builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+
+
+            // Загружаем настройки JWT
+            var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+            var signingKey = jwtSettings["SigningKey"];
+
+            if (string.IsNullOrEmpty(signingKey))
+            {
+                throw new Exception("JWT Signing Key is missing from configuration!");
+            }
+
+            // Декодируем ключ из Base64
+            var keyBytes = Convert.FromBase64String(signingKey);
+
+            if (keyBytes.Length < 32)
+            {
+                throw new Exception($"JWT Key must be at least 256 bits (32 bytes), but got {keyBytes.Length} bytes.");
+            }
+
+            Console.WriteLine($"Decoded JWT Key bytes length: {keyBytes.Length} bytes");
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtSettings["Issuer"],
+                        ValidAudience = jwtSettings.GetSection("Audiences").Get<string[]>()?.FirstOrDefault(),
+                        IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
+                    };
+                });
+
+
+            builder.Services.AddAuthorization();
+
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreatePost).Assembly));
+
         }
 
         public static void RegisterEndpointDefinitions(this WebApplication app)
