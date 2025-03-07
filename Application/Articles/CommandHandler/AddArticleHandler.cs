@@ -1,12 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using Domain.Models;
 
-namespace Application.Articles.CommandHandler
+using Application.Articles.Commands;
+using Application.Abstractions;
+
+namespace Application.Articles.CommandHandlers
 {
-    internal class AddArticleHandler
+    public class AddArticleHandler : IRequestHandler<AddArticle, Article>
     {
+        private readonly IArticleRepository _repository;
+
+        public AddArticleHandler(IArticleRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public async Task<Article> Handle(AddArticle request, CancellationToken cancellationToken)
+        {
+            var article = new Article
+            {
+                Title = request.Title,
+                Content = request.Content,
+                AuthorId = request.AuthorId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            return await _repository.AddArticle(article);
+        }
     }
 }

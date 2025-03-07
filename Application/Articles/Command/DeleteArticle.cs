@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
 
-namespace Application.Articles.Command
+namespace Application.Articles.Commands
 {
-    internal class DeleteArticle
+    public class DeleteArticle : IRequest
     {
+        public int ArticleId { get; set; }
     }
 }

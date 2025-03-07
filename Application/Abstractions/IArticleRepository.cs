@@ -1,12 +1,20 @@
-﻿using System;
+﻿using Domain.Models;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Application.Abstractions
 {
-    internal class IArticleRepository
+    public interface IArticleRepository
     {
+        Task<Article> GetArticleById(int id);
+        Task<ICollection<Article>> GetAllArticle();
+        Task<Article> AddArticle(Article article);
+        Task<Article> UpdateArticle(string  article,int articleId);
+        Task DeleteArticle(int id);
     }
+
 }

@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using Domain.Models;
 
-namespace Application.Articles.Command
+namespace Application.Articles.Commands
 {
-    internal class AddArticle
+    public class AddArticle : IRequest<Article>
     {
+        public string Title { get; set; }
+        public string Content { get; set; }
+        public int AuthorId { get; set; }
     }
 }
