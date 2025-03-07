@@ -1,0 +1,9 @@
+﻿Domain/bin
+Domain/obj
+MinimalAPI/bin
+MinimalAPI/obj
+DataAccess/obj
+DataAccess/bin
+Application/bin
+Application/obj
+.vs
