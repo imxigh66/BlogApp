@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Application.Authorization.Command
 {
-    public class LoginUserCommand:IRequest<string>
+    public class LoginUserCommand:IRequest<AuthResult>
     {
         public string Email { get; set; }
         public string Password { get; set; }

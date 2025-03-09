@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Application.Authorization.CommandHandler
 {
-    public class LoginUserHandler : IRequestHandler<LoginUserCommand, string>
+    public class LoginUserHandler : IRequestHandler<LoginUserCommand, AuthResult>
     {
         private readonly IAuthRepository _authRepository;
 
@@ -18,7 +18,7 @@ namespace Application.Authorization.CommandHandler
             _authRepository = authRepository;
         }
 
-        public async Task<string> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+        public async Task<AuthResult> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
             return await _authRepository.LoginAsync(request.Email, request.Password);
         }

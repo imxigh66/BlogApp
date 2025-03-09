@@ -54,10 +54,14 @@ namespace MinimalAPI.Exstensions
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = jwtSettings["Issuer"],
-                        ValidAudience = jwtSettings.GetSection("Audiences").Get<string[]>()?.FirstOrDefault(),
-                        IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
+                        ValidAudience = jwtSettings["Audiences:0"],
+                        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+                        ClockSkew = TimeSpan.Zero // Уменьшите погрешность времени
                     };
+
+                  
                 });
+
 
 
             builder.Services.AddAuthorization();

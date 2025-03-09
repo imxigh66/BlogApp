@@ -1,30 +1,19 @@
 
-
 using MinimalAPI.Exstensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.RegisterServices();
 
+builder.RegisterServices();
+builder.Services.AddAuthorizationPolicies();
 
 var app = builder.Build();
 
-app.Use(async (ctx, next) =>
-{
-	try
-	{
-		await next();
-	}
-	catch (Exception)
-	{
 
-		ctx.Response.StatusCode = 500;
-		await ctx.Response.WriteAsync("An error occured");
-	}
 
-});
 
-app.UseDeveloperExceptionPage(); // Показывает ошибки в ответах
+
+app.UseDeveloperExceptionPage(); 
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -32,7 +21,6 @@ app.UseAuthorization();
 app.UseHttpsRedirection();
 
 app.RegisterEndpointDefinitions();
-
 
 
 app.Run();

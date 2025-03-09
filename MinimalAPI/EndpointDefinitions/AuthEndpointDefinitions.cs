@@ -10,14 +10,30 @@ namespace MinimalAPI.EndpointDefinitions
         {
             app.MapPost("api/register", async (IMediator mediator, RegisterUserCommand command) =>
             {
-                return await mediator.Send(command);
-            });
+                var result = await mediator.Send(command);
+
+                if (result.Success)
+                {
+                    return Results.Ok(result);
+                }
+
+                return Results.BadRequest(result);
+            }).AllowAnonymous();
 
             app.MapPost("api/login", async (IMediator mediator, LoginUserCommand command) =>
             {
-                return await mediator.Send(command);
-            });
+                var result = await mediator.Send(command);
+
+                if (result.Success)
+                {
+                    return Results.Ok(result);
+                }
+
+                return Results.Unauthorized();
+            }).AllowAnonymous();
 
         }
+
+
     }
 }

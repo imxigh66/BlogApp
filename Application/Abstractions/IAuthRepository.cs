@@ -1,4 +1,5 @@
 ﻿using Domain.Enumerations;
+using Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,9 @@ namespace Application.Abstractions
 {
     public interface IAuthRepository
     {
-        Task<string> RegisterAsync(string username, string email, string password, UserRole role);
-        Task<string> LoginAsync(string email, string password);
+        Task<AuthResult> RegisterAsync(string username, string email, string password, UserRole role);
+        Task<AuthResult> LoginAsync(string email, string password);
+        Task<User> GetUserByIdAsync(int id);
     }
 
 }

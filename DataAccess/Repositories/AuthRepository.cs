@@ -1,4 +1,5 @@
-﻿using Application.Abstractions;
+﻿using Application;
+using Application.Abstractions;
 using Domain.Enumerations;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
@@ -27,10 +28,14 @@ namespace DataAccess.Repositories
             _configuration = configuration;
         }
 
-        public async Task<string> RegisterAsync(string username, string email, string password, UserRole role)
+        public async Task<AuthResult> RegisterAsync(string username, string email, string password, UserRole role)
         {
             if (await _context.Users.AnyAsync(u => u.Email == email))
-                return "User already exists";
+                return new AuthResult
+                {
+                    Success = false,
+                    Message = "User already exists"
+                };
 
             string passwordHash = BCrypt.Net.BCrypt.HashPassword(password); // Хешируем пароль
 
@@ -45,21 +50,34 @@ namespace DataAccess.Repositories
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return "User registered successfully";
+            return new AuthResult
+            {
+                Success = true,
+                Message = "User registered successfully"
+            };
         }
 
-        public async Task<string> LoginAsync(string email, string password)
+        public async Task<AuthResult> LoginAsync(string email, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return "Invalid email or password";
+                return new AuthResult
+                {
+                    Success = false,
+                    Message = "Invalid email or password"
+                };
+            string token = GenerateJwtToken(user);
 
-            return GenerateJwtToken(user);
+            return new AuthResult
+            {
+                Success = true,
+                Token = token
+            };
         }
 
-        public async Task<User?> GetUserByEmailAsync(string email)
+        public async Task<User?> GetUserByIdAsync(int id)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
         }
 
         private string GenerateJwtToken(User user)
@@ -69,7 +87,8 @@ namespace DataAccess.Repositories
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Name, user.Username),
         new Claim(ClaimTypes.Email, user.Email),
-        new Claim(ClaimTypes.Role, user.Role.ToString())
+        new Claim(ClaimTypes.Role, user.Role.ToString()),
+        new Claim("Rating", user.Rating.ToString())
     };
 
             // Загружаем ключ из `appsettings.json`
@@ -86,7 +105,7 @@ namespace DataAccess.Repositories
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["JwtSettings:Issuer"],
-                audience: _configuration["JwtSettings:Audience"],
+                audience: _configuration["JwtSettings:Audiences:0"] ,
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds
