@@ -1,5 +1,4 @@
 ﻿using Application.Articles.Dto;
-using Domain.Models;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Application.Articles.Queries
 {
-    public class GetAllArticles:IRequest<List<ArticleDto>>
+    public class GetPendingArticlesQuery:IRequest<List<ArticleDto>>
     {
     }
 }

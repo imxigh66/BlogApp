@@ -1,12 +1,15 @@
-﻿using Application.Articles.Commands;
+﻿using Application.Articles.Command;
+using Application.Articles.Commands;
 using Application.Articles.Queries;
 using Application.Posts.Commands;
 using Application.Posts.Queries;
+using Domain.Enumerations;
 using Domain.Models;
 using MediatR;
 using Microsoft.Extensions.Hosting;
 using MinimalAPI.Abstractions;
 using MinimalAPI.Filters;
+using System.Security.Claims;
 
 namespace MinimalAPI.EndpointDefinitions
 {
@@ -14,53 +17,55 @@ namespace MinimalAPI.EndpointDefinitions
     {
         public void RegisterEndpoints(WebApplication app)
         {
-            var articles = app.MapGroup("/api/article");
+            // Создание статьи (только для авторов)
+            app.MapPost("api/articles", async (
+                IMediator mediator,
+                AddArticle command,
+                HttpContext context) =>
+            {
+               
+                var userId = int.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var userRating = int.Parse(context.User.FindFirstValue("Rating") ?? "0");
+                var userRole = context.User.FindFirstValue(ClaimTypes.Role);
 
-            articles.MapGet("/{id}", GetArticleById)
-                .WithName("GetArticleById");
+                bool needsModeration = userRole == UserRole.Author.ToString() && userRating < 50;
 
-            articles.MapPost("/", AddArtcile);
+                command.AuthorId = userId;
+                command.NeedsModeration = needsModeration;
 
-            articles.MapGet("/", GetAllArticles);
+                return await mediator.Send(command);
+            }).RequireAuthorization("Author");
 
-            articles.MapPut("/{id}", UpdateArticle);
+            
+            app.MapGet("api/articles", async (IMediator mediator) =>
+            {
+                return await mediator.Send(new GetAllArticles());
+            });
 
-            articles.MapDelete("/{id}", DeleteArticle);
-        }
 
-        private async Task<IResult> GetArticleById(IMediator mediator, int id)
-        {
-            var getArticle = new GetArticlesById { ArticleId = id };
-            var article = await mediator.Send(getArticle);
-            return TypedResults.Ok(article);
-        }
+            // Получение статей на модерации (только для админов)
+            app.MapGet("api/articles/pending", async (IMediator mediator) =>
+            {
+                return await mediator.Send(new GetPendingArticlesQuery());
+            }).RequireAuthorization("Admin");
 
-        private async Task<IResult> AddArtcile(IMediator mediator, Article article)
-        {
-            var addArticle = new AddArticle { Content = article.Content };
-            var addedArticle = await mediator.Send(addArticle);
-            return Results.CreatedAtRoute("GetArticleById", new { addedArticle.Id }, addedArticle);
-        }
 
-        private async Task<IResult> GetAllArticles(IMediator mediator)
-        {
-            var getCommand = new GetAllArticles();
-            var articles = await mediator.Send(getCommand);
-            return TypedResults.Ok(articles);
-        }
 
-        private async Task<IResult> UpdateArticle(IMediator mediator, Article article, int id)
-        {
-            var updateArticle = new UpdateArticle { ArticleId = id, Content = article.Content };
-            var updatedArticle = await mediator.Send(updateArticle);
-            return TypedResults.Ok(updatedArticle);
-        }
+            app.MapGet("api/articles/{id}", async (int id, IMediator mediator) =>
+            {
+                return await mediator.Send(new GetArticlesById { ArticleId = id });
+            });
 
-        private async Task<IResult> DeleteArticle(IMediator mediator, int id)
-        {
-            var deleteArticle = new DeleteArticle { ArticleId = id };
-            await mediator.Send(deleteArticle);
-            return TypedResults.NoContent();
+            
+            // Модерация статьи (только для админов)
+            app.MapPost("api/articles/{id}/moderate", async (
+                int id,
+                ModerateArticleCommand command,
+                IMediator mediator) =>
+            {
+                command.ArticleId = id;
+                return await mediator.Send(command);
+            }).RequireAuthorization("Admin");
         }
 
     }

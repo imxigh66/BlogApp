@@ -54,8 +54,27 @@ namespace DataAccess.Repositories
             }
         }
 
-        
-        
+
+        public async Task<ICollection<Article>> GetPendingArticles()
+        {
+            return await _context.Articles
+                .Where(a => !a.IsPublished)
+                .Include(a => a.Author)
+                .ToListAsync();
+        }
+
+        public async Task UpdateArticleStatus(int articleId, bool isPublished)
+        {
+            var article = await _context.Articles.FindAsync(articleId);
+            if (article != null)
+            {
+                article.IsPublished = isPublished;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+
+
     }
 
 }

@@ -15,6 +15,8 @@ namespace Application.Abstractions
         Task<Article> AddArticle(Article article);
         Task<Article> UpdateArticle(string  article,int articleId);
         Task DeleteArticle(int id);
+        Task<ICollection<Article>> GetPendingArticles();
+        Task UpdateArticleStatus(int articleId, bool isPublished);
     }
 
 }
