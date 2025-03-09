@@ -9,9 +9,11 @@ namespace Domain.Models
     public class Like
     {
         public int Id { get; set; }
+        public string ClientIpAddress { get; set; }
+        public DateTime CreatedAt { get; set; }
+
         public int ArticleId { get; set; }
-        public string UserIdentifier { get; set; } // Храним ID пользователя или GuestID
-        public DateTime LikedAt { get; set; } = DateTime.UtcNow;
+        public Article Article { get; set; }
     }
 
 }

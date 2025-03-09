@@ -11,7 +11,7 @@ namespace Domain.Models
         public int AuthorId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsPublished { get; set; } = false; // По умолчанию статья на модерации
-        public int Likes { get; set; } = 0; // Количество лайков
+        public List<Like> Likes { get; set; } = new();
         public List<Comment> Comments { get; set; } = new();
     }
 }
