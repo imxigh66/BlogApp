@@ -1,5 +1,5 @@
-﻿using Application;
-using Application.Abstractions;
+﻿using Application.Abstractions;
+using Application.Authorization;
 using Domain.Enumerations;
 using Domain.Models;
 using Microsoft.AspNetCore.Identity;
@@ -114,8 +114,11 @@ namespace DataAccess.Repositories
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-
-
+        public async Task<bool> UpdateUserAsync(User user)
+        {
+            _context.Users.Update(user);
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 
 
