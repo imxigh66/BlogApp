@@ -6,7 +6,19 @@ using System.Threading.Tasks;
 
 namespace Domain.Models.Content
 {
-    class ImageContent
+    public class ImageContent : Content
     {
+        public string ImageUrl { get; set; }
+        public string AltText { get; set; }
+
+        public ImageContent()
+        {
+            ContentType = "Image";
+        }
+
+        public override string Render()
+        {
+            return $"<img src=\"{ImageUrl}\" alt=\"{AltText}\" />";
+        }
     }
 }

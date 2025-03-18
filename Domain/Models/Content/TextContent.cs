@@ -6,7 +6,20 @@ using System.Threading.Tasks;
 
 namespace Domain.Models.Content
 {
-    class TextContent
+    
+
+    public class TextContent : Content
     {
+        public string Body { get; set; }
+
+        public TextContent()
+        {
+            ContentType = "Text";
+        }
+
+        public override string Render()
+        {
+            return Body;
+        }
     }
 }

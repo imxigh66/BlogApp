@@ -6,7 +6,24 @@ using System.Threading.Tasks;
 
 namespace Application.Content
 {
-    class ContentFactoryProducer
+    public enum ContentType
     {
+        Text,
+        Image,
+        Video
+    }
+
+    public class ContentFactoryProducer
+    {
+        public static IContentFactory GetFactory(ContentType type)
+        {
+            return type switch
+            {
+                ContentType.Text => new TextContentFactory(),
+                ContentType.Image => new ImageContentFactory(),
+                ContentType.Video => new VideoContentFactory(),
+                _ => throw new ArgumentException("Неизвестный тип контента", nameof(type))
+            };
+        }
     }
 }

@@ -1,5 +1,7 @@
 ﻿
 
+using Domain.Models.Content;
+
 namespace Domain.Models
 {
     public class Article : ICloneable<Article>
@@ -14,7 +16,7 @@ namespace Domain.Models
         public List<Like> Likes { get; set; } = new();
         public List<Comment> Comments { get; set; } = new();
 
-
+        public List<Content.Content> ContentItems { get; set; } = new List<Content.Content>();
         public Article Clone()
         {
             return new Article

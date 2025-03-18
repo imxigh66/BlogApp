@@ -94,6 +94,24 @@ namespace MinimalAPI.EndpointDefinitions
 
                 return result.Success ? Results.Ok(result) : Results.BadRequest(result);
             }).RequireAuthorization("Author");
+
+
+            app.MapPost("api/articles/rich", async (
+    IMediator mediator,
+    AddRichArticle command,
+    HttpContext context) =>
+            {
+                var userId = int.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var userRating = int.Parse(context.User.FindFirstValue("Rating") ?? "0");
+                var userRole = context.User.FindFirstValue(ClaimTypes.Role);
+
+                bool needsModeration = userRole == UserRole.Author.ToString() && userRating < 50;
+
+                command.AuthorId = userId;
+                command.NeedsModeration = needsModeration;
+
+                return await mediator.Send(command);
+            }).RequireAuthorization("Author");
         }
 
     }

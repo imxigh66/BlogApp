@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace Domain.Models.Content
 {
-    interface IContent
+    public interface IContent
     {
+        int Id { get; set; }
+        string Title { get; set; }
+        DateTime CreatedAt { get; set; }
+        string Render();
     }
 }
