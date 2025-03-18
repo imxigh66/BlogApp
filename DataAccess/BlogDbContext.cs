@@ -1,5 +1,6 @@
 ﻿using DataAccess.Configurations;
 using Domain.Models;
+using Domain.Models.Notifications;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ namespace DataAccess
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Article> Articles { get; set; }
         public DbSet<Like> Likes { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

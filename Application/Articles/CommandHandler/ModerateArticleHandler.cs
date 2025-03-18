@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions;
 using Application.Articles.Command;
+using Application.Notifications;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -12,9 +13,11 @@ namespace Application.Articles.CommandHandler
     public class ModerateArticleHandler : IRequestHandler<ModerateArticleCommand, ArticleResult>
     {
         private readonly IArticleRepository _repository;
-        public ModerateArticleHandler(IArticleRepository repository)
+        private readonly INotificationRepository _notificationRepository;
+        public ModerateArticleHandler(IArticleRepository repository, INotificationRepository notificationRepository)
         {
             _repository = repository;
+            _notificationRepository = notificationRepository;
         }
         public async Task<ArticleResult> Handle(ModerateArticleCommand request, CancellationToken cancellationToken)
         {
@@ -41,6 +44,15 @@ namespace Application.Articles.CommandHandler
                 // Публикуем статью
                 article.IsPublished = true;
                 await _repository.UpdateArticleStatus(article.Id, true);
+
+                // Создаем уведомление через фабрику
+                var notificationFactory = new ArticlePublishedNotificationFactory(
+                    article.AuthorId,
+                    article.Id,
+                    article.Title
+                );
+                var notification = notificationFactory.CreateNotification();
+                await _notificationRepository.AddNotificationAsync(notification);
 
                 return new ArticleResult
                 {

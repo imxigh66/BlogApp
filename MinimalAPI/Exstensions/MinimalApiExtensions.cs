@@ -25,6 +25,7 @@ namespace MinimalAPI.Exstensions
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<ICommentRepository, CommentRepository>();
             builder.Services.AddScoped<ILikeRepository, LikeRepository>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 

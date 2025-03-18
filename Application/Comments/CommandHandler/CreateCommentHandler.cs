@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions;
 using Application.Comments.Command;
+using Application.Notifications;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -13,11 +14,13 @@ namespace Application.Comments.CommandHandler
     {
         private readonly ICommentRepository _commentRepository;
         private readonly IArticleRepository _articleRepository;
+        private readonly INotificationRepository _notificationRepository;
 
-        public CreateCommentHandler(ICommentRepository commentRepository, IArticleRepository articleRepository)
+        public CreateCommentHandler(ICommentRepository commentRepository, IArticleRepository articleRepository, INotificationRepository notificationRepository)
         {
             _commentRepository = commentRepository;
             _articleRepository = articleRepository;
+            _notificationRepository = notificationRepository;
         }
         public async Task<CommentResult> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
         {
@@ -35,6 +38,17 @@ namespace Application.Comments.CommandHandler
             };
 
             var addedComment = await _commentRepository.AddAsync(comment);
+
+            // Создаем уведомление для автора статьи с использованием фабричного метода
+            var notificationFactory = new NewCommentNotificationFactory(
+                article.AuthorId,
+                article.Id,
+                addedComment.Id,
+                comment.Username);
+
+            var notification = notificationFactory.CreateNotification();
+            await _notificationRepository.AddNotificationAsync(notification);
+
 
             return new CommentResult
             {
