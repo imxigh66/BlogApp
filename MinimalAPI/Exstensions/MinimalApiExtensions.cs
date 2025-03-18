@@ -7,6 +7,7 @@ using MinimalAPI.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using DataAccess.Services;
 
 namespace MinimalAPI.Exstensions
 {
@@ -69,6 +70,7 @@ namespace MinimalAPI.Exstensions
             builder.Services.AddAuthorization();
 
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreatePost).Assembly));
+            builder.Services.AddHostedService<CacheCleanupService>();
 
         }
 

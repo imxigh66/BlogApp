@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions;
+using DataAccess.Services;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -21,7 +22,23 @@ namespace DataAccess.Repositories
 
         public async Task<Article> GetArticleById(int id)
         {
-            return await _context.Articles.Include(a => a.Author).FirstOrDefaultAsync(a => a.Id == id);
+            // Пытаемся получить из кэша
+            string cacheKey = $"article_{id}";
+            if (CacheService.Instance.TryGetValue(cacheKey, out Article cachedArticle))
+            {
+                return cachedArticle;
+            }
+
+            // Если нет в кэше, запрашиваем из базы
+            var article = await _context.Articles.Include(a => a.Author).FirstOrDefaultAsync(a => a.Id == id);
+
+            // Если нашли статью, кэшируем ее на 10 минут
+            if (article != null)
+            {
+                CacheService.Instance.Set(cacheKey, article, TimeSpan.FromMinutes(10));
+            }
+
+            return article;
         }
 
         public async Task<ICollection<Article>> GetAllArticle()
