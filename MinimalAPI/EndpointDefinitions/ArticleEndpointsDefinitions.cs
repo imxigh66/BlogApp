@@ -6,6 +6,7 @@ using Application.Posts.Queries;
 using Domain.Enumerations;
 using Domain.Models;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using MinimalAPI.Abstractions;
 using MinimalAPI.Filters;
@@ -66,6 +67,33 @@ namespace MinimalAPI.EndpointDefinitions
                 command.ArticleId = id;
                 return await mediator.Send(command);
             }).RequireAuthorization("Admin");
+
+
+            app.MapPost("api/articles/{id}/clone", async (
+    int id,
+    IMediator mediator,
+    HttpContext context,
+    [FromQuery] bool asDraft = true) =>
+            {
+                var userId = int.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+                // Только автор статьи или администратор может клонировать статью
+                var article = await mediator.Send(new GetArticlesById { ArticleId = id });
+                if (article == null)
+                {
+                    return Results.NotFound();
+                }
+
+                var command = new CloneArticle
+                {
+                    SourceArticleId = id,
+                    AsDraft = asDraft
+                };
+
+                var result = await mediator.Send(command);
+
+                return result.Success ? Results.Ok(result) : Results.BadRequest(result);
+            }).RequireAuthorization("Author");
         }
 
     }
