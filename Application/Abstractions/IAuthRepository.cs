@@ -11,7 +11,7 @@ namespace Application.Abstractions
 {
     public interface IAuthRepository
     {
-        Task<AuthResult> RegisterAsync(string username, string email, string password, UserRole role);
+        Task<AuthResult> RegisterAsync(string username, string email,string phoneNumber, string password, UserRole? role);
         Task<AuthResult> LoginAsync(string email, string password);
         Task<User> GetUserByIdAsync(int id);
         Task<bool> UpdateUserAsync(User user);

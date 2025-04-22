@@ -21,14 +21,14 @@ namespace DataAccess.Repositories
     {
         private readonly BlogDbContext _context;
         private readonly IConfiguration _configuration;
-
+        
         public AuthRepository(BlogDbContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;
         }
 
-        public async Task<AuthResult> RegisterAsync(string username, string email, string password, UserRole role)
+        public async Task<AuthResult> RegisterAsync(string username, string email,string phoneNumber, string password, UserRole? role)
         {
             if (await _context.Users.AnyAsync(u => u.Email == email))
                 return new AuthResult
@@ -43,8 +43,9 @@ namespace DataAccess.Repositories
             {
                 Username = username,
                 Email = email,
+                PhoneNumber=phoneNumber,
                 PasswordHash = passwordHash,
-                Role = role
+                Role = role ?? UserRole.Author
             };
 
             _context.Users.Add(user);

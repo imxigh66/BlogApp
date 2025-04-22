@@ -11,6 +11,7 @@ namespace Domain.Models
         public string PasswordHash { get; set; }
         public UserRole Role { get; set; }
         public int Rating { get; set; }
+        public string PhoneNumber { get; set; }
         public List<Article> Articles { get; set; } = new();
 
     }

@@ -16,11 +16,14 @@ namespace Application.Comments.CommandHandler
         private readonly IArticleRepository _articleRepository;
         private readonly INotificationRepository _notificationRepository;
 
-        public CreateCommentHandler(ICommentRepository commentRepository, IArticleRepository articleRepository, INotificationRepository notificationRepository)
+        private readonly INotificationSender _notificationSender;
+
+        public CreateCommentHandler(ICommentRepository commentRepository, IArticleRepository articleRepository, INotificationRepository notificationRepository, INotificationSender notificationSender)
         {
             _commentRepository = commentRepository;
             _articleRepository = articleRepository;
             _notificationRepository = notificationRepository;
+            _notificationSender = notificationSender;
         }
         public async Task<CommentResult> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
         {
@@ -47,8 +50,9 @@ namespace Application.Comments.CommandHandler
                 comment.Username);
 
             var notification = notificationFactory.CreateNotification();
-            await _notificationRepository.AddNotificationAsync(notification);
+            //await _notificationRepository.AddNotificationAsync(notification);
 
+            await _notificationSender.SendAsync(notification);
 
             return new CommentResult
             {

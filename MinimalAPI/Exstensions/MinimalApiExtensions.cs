@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DataAccess.Services;
+using Application.Notifications.Decorators;
 
 namespace MinimalAPI.Exstensions
 {
@@ -27,6 +28,36 @@ namespace MinimalAPI.Exstensions
             builder.Services.AddScoped<ILikeRepository, LikeRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+
+            builder.Services.AddHttpClient("SmsService");
+
+            // Регистрация репозитория для телефонов
+            builder.Services.AddScoped<IUserPhoneRepository, UserPhoneRepository>();
+
+            // Регистрация отправителей уведомлений
+            builder.Services.AddScoped<INotificationSender>(provider => {
+                var notificationRepository = provider.GetRequiredService<INotificationRepository>();
+
+                // Базовый отправщик, который сохраняет в БД
+                INotificationSender sender = new DatabaseNotificationSender(notificationRepository);
+
+                // Декорируем отправкой по Email
+                sender = new EmailNotificationSender(
+                    sender,
+                    provider.GetRequiredService<IAuthRepository>(),
+                    provider.GetRequiredService<IConfiguration>(),
+                    provider.GetRequiredService<ILogger<EmailNotificationSender>>());
+
+                // Декорируем отправкой по SMS
+                sender = new SmsNotificationSender(
+                    sender,
+                    provider.GetRequiredService<IConfiguration>(),
+                    provider.GetRequiredService<IHttpClientFactory>(),
+                    provider.GetRequiredService<IUserPhoneRepository>(),
+                    provider.GetRequiredService<ILogger<SmsNotificationSender>>());
+
+                return sender;
+            });
 
 
             // Загружаем настройки JWT

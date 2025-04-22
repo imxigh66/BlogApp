@@ -20,7 +20,7 @@ namespace Application.Authorization.CommandHandler
 
         public async Task<AuthResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            return await _authRepository.RegisterAsync(request.Username, request.Email, request.Password, request.Role);
+            return await _authRepository.RegisterAsync(request.Username, request.Email,request.PhoneNumber, request.Password, request.Role);
         }
     }
 
