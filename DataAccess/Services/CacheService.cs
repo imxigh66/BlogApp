@@ -17,7 +17,7 @@ namespace DataAccess.Services
 
         public CacheService()
         {
-            _cache = new ConcurrentDictionary<string, object>();
+            _cache = new ConcurrentDictionary<string, object>();    
             _expirations = new ConcurrentDictionary<string, DateTime>();
         }
 
