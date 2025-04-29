@@ -43,7 +43,7 @@ namespace DataAccess.Repositories
 
         public async Task<ICollection<Article>> GetAllArticle()
         {
-            return await _context.Articles.Include(a => a.Author).ToListAsync();
+            return await _context.Articles.Include(a => a.Author).Include(a => a.ContentItems).ToListAsync();
         }
 
         public async Task<Article> AddArticle(Article article)

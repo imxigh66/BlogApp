@@ -1,6 +1,7 @@
 ﻿using Application.Abstractions;
 using Application.Articles.Builder;
 using Application.Articles.Command;
+using Application.Content;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -14,11 +15,12 @@ namespace Application.Articles.CommandHandler
     {
         private readonly IArticleRepository _repository;
         private readonly IAuthRepository _authRepository;
-
-        public AddRichArticleHandler(IArticleRepository repository, IAuthRepository authRepository)
+        private readonly IImageManager _imageManager;
+        public AddRichArticleHandler(IArticleRepository repository, IAuthRepository authRepository, IImageManager imageManager  )
         {
             _repository = repository;
             _authRepository = authRepository;
+            _imageManager = imageManager;
         }
 
         public async Task<ArticleResult> Handle(AddRichArticle request, CancellationToken cancellationToken)
@@ -30,24 +32,73 @@ namespace Application.Articles.CommandHandler
             }
 
             // Используем строителя для создания статьи
-            var builder = new ArticleBuilder();
-            var director = new ArticleDirector(builder);
+            var builder = new ArticleBuilder(_imageManager);
 
-            // Создаем список контента для директора
-            var contentItems = request.ContentItems
-                .Select(item => (item.Type, item.Title, item.Parameters))
-                .ToList();
+            // Готовим статью
+            builder.SetTitle(request.Title)
+                   .SetContent(request.Content)
+                   .SetAuthor(request.AuthorId)
+                   .SetIsPublished(!request.NeedsModeration);
 
-            // Создаем статью через директора
-            var article = director.CreateRichMediaArticle(
-                request.Title,
-                request.Content,
-                request.AuthorId,
-                contentItems,
-                !request.NeedsModeration
-            );
+            // Перебираем элементы контента и добавляем их к статье
+            foreach (var item in request.ContentItems)
+            {
+                if (item.ContentType == ContentType.Image)
+                {
+                    string url = item.Parameters.GetValueOrDefault("url", "");
+                    string alt = item.Parameters.GetValueOrDefault("alt", item.Title);
 
-            // Сохраняем статью в базу данных
+                    // Проверяем, является ли URL настоящим URL (не data:url)
+                    if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+                        (uri.Scheme == "http" || uri.Scheme == "https"))
+                    {
+                        try
+                        {
+                            using var client = new HttpClient();
+                            byte[] imageData = await client.GetByteArrayAsync(uri);
+                            string filename = Path.GetFileName(uri.LocalPath);
+
+                            Console.WriteLine($"Скачано изображение: {filename}, размер: {imageData.Length}");
+
+                            // Используем асинхронный метод для добавления контента с изображением
+                            await builder.AddImageContentAsync(item.Title, imageData, filename, alt);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Ошибка при загрузке изображения: {ex.Message}");
+                            // В случае ошибки просто добавляем с исходным URL
+                            builder.AddImageContent(item.Title, url, alt);
+                        }
+                    }
+                    else
+                    {
+                        // Просто добавляем с исходным URL
+                        builder.AddImageContent(item.Title, url, alt);
+                    }
+                }
+                else
+                {
+                    // Для остальных типов контента используем стандартные методы
+                    switch (item.ContentType)
+                    {
+                        case ContentType.Text:
+                            builder.AddTextContent(item.Title,
+                                item.Parameters.GetValueOrDefault("body", ""));
+                            break;
+                        case ContentType.Video:
+                            builder.AddVideoContent(item.Title,
+                                item.Parameters.GetValueOrDefault("url", ""));
+                            break;
+                        default:
+                            var contentItem = ContentFactoryProducer.GetFactory(item.ContentType)
+                                .CreateContent(item.Title, item.Parameters);
+                            builder.AddContentItem(contentItem);
+                            break;
+                    }
+                }
+            }
+
+            var article = builder.Build();
             var addedArticle = await _repository.AddArticle(article);
 
             return new ArticleResult

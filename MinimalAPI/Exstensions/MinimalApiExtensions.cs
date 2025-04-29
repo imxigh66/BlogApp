@@ -9,6 +9,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DataAccess.Services;
 using Application.Notifications.Decorators;
+using Google.Api.Gax.Rest;
+using Application.Images;
+using DataAccess.Storage;
 
 namespace MinimalAPI.Exstensions
 {
@@ -27,9 +30,23 @@ namespace MinimalAPI.Exstensions
             builder.Services.AddScoped<ICommentRepository, CommentRepository>();
             builder.Services.AddScoped<ILikeRepository, LikeRepository>();
             builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            // В Program.cs или метод RegisterServices
+            builder.Services.AddImageStorage(builder.Configuration);
+            builder.Services.AddScoped<IImageManager, ArticleImageManager>();
+           
+
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
             builder.Services.AddHttpClient("SmsService");
+            //builder.Services.AddScoped<IImageStorage>(provider =>
+            //{
+            //    var config = provider.GetRequiredService<IConfiguration>();
+
+            //    var basePath = config["ImageStorage:Local:BasePath"];
+            //    var baseUrl = config["ImageStorage:Local:BaseUrl"];
+
+            //    return new LocalFileStorage(basePath, baseUrl);
+            //});
 
             // Регистрация репозитория для телефонов
             builder.Services.AddScoped<IUserPhoneRepository, UserPhoneRepository>();

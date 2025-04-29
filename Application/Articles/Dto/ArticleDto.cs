@@ -17,5 +17,6 @@ namespace Application.Articles.Dto
         public int AuthorRating { get; set; }
         public int LikesCount { get; set; }
         public int CommentsCount { get; set; }
+        public List<ContentItemDto> ContentItems { get; set; } = new List<ContentItemDto>();
     }
 }

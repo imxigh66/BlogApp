@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.Abstractions;
 
 namespace Application.Articles.Builder
 {
@@ -13,7 +14,12 @@ namespace Application.Articles.Builder
     {
         private readonly Article _article = new Article();
         private readonly ContentService _contentService = new ContentService();
+        private readonly IImageManager _imageManager;
 
+        public ArticleBuilder(IImageManager imageManager)
+        {
+            _imageManager = imageManager;
+        }
         public IArticleBuilder SetTitle(string title)
         {
             _article.Title = title;
@@ -78,6 +84,23 @@ namespace Application.Articles.Builder
         {
             _article.CreatedAt = DateTime.UtcNow;
             return _article;
+        }
+
+
+        public async Task<IArticleBuilder> AddImageContentAsync(string title, byte[] imageData, string filename, string altText)
+        {
+            // Сохраняем изображение через менеджер
+            string imageUrl = await _imageManager.StoreImageAsync(imageData, filename, altText);
+
+            // Создаем контент с полученным URL
+            var parameters = new Dictionary<string, string>
+            {
+                ["url"] = imageUrl,
+                ["alt"] = altText
+            };
+
+            var content = _contentService.CreateContent(ContentType.Image, title, parameters);
+            return AddContentItem(content);
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿using Application.Articles.Command;
+﻿using Application.Abstractions;
+using Application.Articles;
+using Application.Articles.Builder;
+using Application.Articles.Command;
 using Application.Articles.Commands;
 using Application.Articles.Queries;
 using Application.Posts.Commands;
@@ -112,6 +115,58 @@ namespace MinimalAPI.EndpointDefinitions
 
                 return await mediator.Send(command);
             }).RequireAuthorization("Author");
+
+
+
+            app.MapPost("api/articles/with-image", async (
+    HttpContext context,
+    IFormFile image,
+    [FromForm] string title,
+    [FromForm] string content,
+    IMediator mediator,
+    IImageManager imageManager) =>
+            {
+                var userId = int.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var userRole = context.User.FindFirstValue(ClaimTypes.Role);
+                bool needsModeration = userRole == UserRole.Author.ToString() &&
+                                       int.Parse(context.User.FindFirstValue("Rating") ?? "0") < 50;
+
+                // Чтение изображения в память
+                using var stream = new MemoryStream();
+                await image.CopyToAsync(stream);
+                var imageBytes = stream.ToArray();
+
+                // Сохранение изображения через IImageManager
+                string imageUrl = await imageManager.StoreImageAsync(
+                    imageBytes,
+                    image.FileName,
+                    title); // Используем заголовок как alt-текст
+
+                // Создание статьи с изображением
+                var articleBuilder = new ArticleBuilder(imageManager);
+                var article = articleBuilder
+                    .SetTitle(title)
+                    .SetContent(content)
+                    .SetAuthor(userId)
+                    .SetIsPublished(!needsModeration)
+                    .AddImageContent("Featured Image", imageUrl, title)
+                    .Build();
+
+                // Сохранение статьи в базу данных
+                var articleRepository = context.RequestServices.GetRequiredService<IArticleRepository>();
+                var addedArticle = await articleRepository.AddArticle(article);
+
+                return Results.Ok(new ArticleResult
+                {
+                    Success = true,
+                    ArticleId = addedArticle.Id,
+                    IsPublished = addedArticle.IsPublished,
+                    Message = addedArticle.IsPublished
+                        ? "Статья с изображением опубликована"
+                        : "Статья с изображением отправлена на модерацию"
+                });
+            }).RequireAuthorization("Author")
+            .DisableAntiforgery();
         }
 
     }
