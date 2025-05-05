@@ -14,6 +14,7 @@ using Application.Images;
 using DataAccess.Storage;
 using DataAccess.Proxies;
 using ILogger = Application.Abstractions.ILogger;
+using Application.Export;
 
 namespace MinimalAPI.Exstensions
 {
@@ -42,7 +43,9 @@ namespace MinimalAPI.Exstensions
             // В Program.cs или метод RegisterServices
             builder.Services.AddImageStorage(builder.Configuration);
             builder.Services.AddScoped<IImageManager, ArticleImageManager>();
-           
+
+            builder.Services.AddScoped<ArticleExporterFactory>();
+            builder.Services.AddScoped<ArticleExportService>();
 
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
