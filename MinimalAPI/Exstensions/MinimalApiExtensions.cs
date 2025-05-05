@@ -15,6 +15,8 @@ using DataAccess.Storage;
 using DataAccess.Proxies;
 using ILogger = Application.Abstractions.ILogger;
 using Application.Export;
+using Application.Stories;
+using DataAccess.Services.Story;
 
 namespace MinimalAPI.Exstensions
 {
@@ -46,6 +48,14 @@ namespace MinimalAPI.Exstensions
 
             builder.Services.AddScoped<ArticleExporterFactory>();
             builder.Services.AddScoped<ArticleExportService>();
+
+            builder.Services.AddScoped<IStoryRepository, StoryRepository>();
+            builder.Services.AddScoped<IStoryMediaService, StoryMediaService>();
+            builder.Services.AddScoped<IStoryNotificationService, StoryNotificationService>();
+            builder.Services.AddScoped<StoryFacade>(); // Регистрируем наш Фасад
+
+            // Регистрация фоновой службы очистки
+            builder.Services.AddHostedService<StoryCleanupService>();
 
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 

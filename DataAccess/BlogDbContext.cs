@@ -25,6 +25,8 @@ namespace DataAccess
         public DbSet<Like> Likes { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<ImageEntity> Images { get; set; }
+        public DbSet<Story> Stories { get; set; }
+        public DbSet<StoryView> StoryViews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

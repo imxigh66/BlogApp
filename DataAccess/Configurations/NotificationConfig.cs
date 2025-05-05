@@ -15,9 +15,11 @@ namespace DataAccess.Configurations
         {
             builder.HasDiscriminator(n => n.NotificationType)
                 .HasValue<ArticlePublishedNotification>("ArticlePublished")
-                .HasValue<NewCommentNotification>("NewComment");
+                .HasValue<NewCommentNotification>("NewComment")
+                .HasValue<NewStoryNotification>("NewStory")
+                .HasValue<StoryViewedNotification>("StoryViewed");
 
-            // Другие конфигурации...
+            
         }
     }
 }
