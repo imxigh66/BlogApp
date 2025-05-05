@@ -12,6 +12,8 @@ using Application.Notifications.Decorators;
 using Google.Api.Gax.Rest;
 using Application.Images;
 using DataAccess.Storage;
+using DataAccess.Proxies;
+using ILogger = Application.Abstractions.ILogger;
 
 namespace MinimalAPI.Exstensions
 {
@@ -23,9 +25,16 @@ namespace MinimalAPI.Exstensions
             var cs = builder.Configuration.GetConnectionString("Default");
             builder.Services.AddDbContext<BlogDbContext>(opt => opt.UseSqlServer(cs));
 
+            builder.Services.AddSingleton<ILogger, Logger>();
 
             builder.Services.AddScoped<IPostRepository, PostRepository>();
-            builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+            builder.Services.AddScoped<ArticleRepository>();
+
+            builder.Services.AddScoped<IArticleRepository>(provider => {
+                var articleRepo = provider.GetRequiredService<ArticleRepository>();
+                var logger = provider.GetRequiredService<ILogger>();
+                return new ArticleRepositoryProxy(articleRepo, logger);
+            });
             builder.Services.AddScoped<IAuthRepository, AuthRepository>();
             builder.Services.AddScoped<ICommentRepository, CommentRepository>();
             builder.Services.AddScoped<ILikeRepository, LikeRepository>();
