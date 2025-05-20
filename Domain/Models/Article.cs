@@ -29,6 +29,7 @@ namespace Domain.Models
 
         // Добавляем поле для причин отклонения/блокировки
         public string StateReason { get; set; }
+        public List<Tag> Tags { get; set; } = new List<Tag>();
 
         public Article()
         {

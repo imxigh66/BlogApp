@@ -6,6 +6,7 @@ using Application.Articles.Commands;
 using Application.Articles.Queries;
 using Application.Posts.Commands;
 using Application.Posts.Queries;
+using Application.Strategies;
 using Domain.Enumerations;
 using Domain.Models;
 using MediatR;
@@ -40,10 +41,29 @@ namespace MinimalAPI.EndpointDefinitions
                 return await mediator.Send(command);
             }).RequireAuthorization("Author");
 
-            
-            app.MapGet("api/articles", async (IMediator mediator) =>
+
+            // MinimalAPI/EndpointDefinitions/ArticleEndpointsDefinitions.cs
+            app.MapGet("api/articles", async (
+                [FromQuery] string sort,
+                [FromQuery] int? userId,
+                IMediator mediator,
+                SortingStrategyFactory strategyFactory) =>
             {
-                return await mediator.Send(new GetAllArticles());
+                var strategy = strategyFactory.CreateStrategy(sort ?? "newest");
+
+                var command = new GetAllArticles
+                {
+                    UserId = userId,
+                    SortingStrategy = sort ?? "newest"
+                };
+
+                var articles = await mediator.Send(command);
+
+                return Results.Ok(new
+                {
+                    sortBy = strategy.GetName(),
+                    articles = articles
+                });
             });
 
 

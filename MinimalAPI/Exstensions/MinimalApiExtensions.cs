@@ -17,6 +17,7 @@ using ILogger = Application.Abstractions.ILogger;
 using Application.Export;
 using Application.Stories;
 using DataAccess.Services.Story;
+using Application.Strategies;
 
 namespace MinimalAPI.Exstensions
 {
@@ -53,6 +54,13 @@ namespace MinimalAPI.Exstensions
             builder.Services.AddScoped<IStoryMediaService, StoryMediaService>();
             builder.Services.AddScoped<IStoryNotificationService, StoryNotificationService>();
             builder.Services.AddScoped<StoryFacade>(); // Регистрируем наш Фасад
+
+            builder.Services.AddScoped<IUserActivityRepository, UserActivityRepository>();
+            builder.Services.AddScoped<SortingStrategyFactory>();
+
+            // Регистрируем стратегию по умолчанию
+            builder.Services.AddScoped<IPostSortingStrategy>(provider =>
+                new NewestStrategy());
 
             // Регистрация фоновой службы очистки
             builder.Services.AddHostedService<StoryCleanupService>();

@@ -11,5 +11,7 @@ namespace Application.Articles.Queries
 {
     public class GetAllArticles:IRequest<List<ArticleDto>>
     {
+        public int? UserId { get; set; }
+        public string SortingStrategy { get; set; } = "newest";
     }
 }

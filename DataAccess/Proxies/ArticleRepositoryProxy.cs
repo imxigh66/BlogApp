@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions;
+using Application.Strategies;
 using Domain.Models;
 using System;
 using System.Collections.Generic;
@@ -51,19 +52,19 @@ namespace DataAccess.Proxies
             }
         }
 
-        public async Task<ICollection<Article>> GetAllArticle()
+        public async Task<ICollection<Article>> GetAllArticles(IPostSortingStrategy sortingStrategy, int? userId = null)
         {
-            _logger.LogInfo("Запрос на получение всех статей");
+            Console.WriteLine($"Прокси: получение статей с сортировкой по стратегии {sortingStrategy.GetName()}");
+
+            var stopwatch = Stopwatch.StartNew();
             try
             {
-                var articles = await _repository.GetAllArticle();
-                _logger.LogInfo($"Получено {articles.Count} статей");
-                return articles;
+                return await _repository.GetAllArticles(sortingStrategy, userId);
             }
-            catch (Exception ex)
+            finally
             {
-                _logger.LogError("Ошибка при получении всех статей", ex);
-                throw;
+                stopwatch.Stop();
+                Console.WriteLine($"Прокси: получение статей заняло {stopwatch.ElapsedMilliseconds} мс");
             }
         }
 

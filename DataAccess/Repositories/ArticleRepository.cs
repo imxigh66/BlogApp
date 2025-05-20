@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions;
+using Application.Strategies;
 using DataAccess.Services;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -82,9 +83,25 @@ namespace DataAccess.Repositories
 
 
 
-        public async Task<ICollection<Article>> GetAllArticle()
+        // DataAccess/Repositories/ArticleRepository.cs
+        public async Task<ICollection<Article>> GetAllArticles(IPostSortingStrategy sortingStrategy, int? userId = null)
         {
-            return await _context.Articles.Include(a => a.Author).Include(a => a.ContentItems).ToListAsync();
+            // Получаем опубликованные статьи
+            var query = _context.Articles
+                .Include(a => a.Author)
+                .Include(a => a.Likes)
+                .Include(a => a.Comments)
+                .Include(a => a.ContentItems)
+                .Include(a => a.Tags)
+                .Where(a => a.IsPublished);
+
+            // Применяем выбранную стратегию сортировки
+            query = sortingStrategy.Sort(query, userId);
+
+            // Получаем список статей
+            var articles = await query.ToListAsync();
+
+            return articles;
         }
 
         // DataAccess/Repositories/ArticleRepository.cs

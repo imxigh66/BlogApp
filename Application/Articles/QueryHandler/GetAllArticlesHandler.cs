@@ -3,6 +3,7 @@ using Application.Articles.Dto;
 using Application.Articles.Queries;
 using Application.Content;
 using Application.Posts.Queries;
+using Application.Strategies;
 using Domain.Models;
 using Domain.Models.Content;
 using MediatR;
@@ -19,19 +20,22 @@ namespace Application.Articles.QueryHandler
         private readonly IArticleRepository _articleRepository;
         private readonly ILikeRepository _likeRepository;
         private readonly ICommentRepository _commentRepository;
+        private readonly IPostSortingStrategy _sortingStrategy;
+
         public GetAllArticlesHandler(
-      IArticleRepository articleRepository,
-      ILikeRepository likeRepository,
-      ICommentRepository commentRepository)
+            IArticleRepository articleRepository,
+            ILikeRepository likeRepository,
+            ICommentRepository commentRepository,
+            IPostSortingStrategy sortingStrategy)
         {
             _articleRepository = articleRepository;
             _likeRepository = likeRepository;
             _commentRepository = commentRepository;
+            _sortingStrategy = sortingStrategy;
         }
-
         public async Task<List<ArticleDto>> Handle(GetAllArticles request, CancellationToken cancellationToken)
         {
-            var articles = await _articleRepository.GetAllArticle();
+            var articles = await _articleRepository.GetAllArticles(_sortingStrategy, request.UserId);
             var publishedArticles = articles.Where(a => a.IsPublished).ToList();
 
             // Создаем список DTO с подсчетом лайков и комментариев
