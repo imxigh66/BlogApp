@@ -2,6 +2,7 @@
 using Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -129,6 +130,27 @@ namespace DataAccess.Proxies
             {
                 _logger.LogError($"Ошибка при изменении статуса статьи с ID: {articleId}", ex);
                 throw;
+            }
+        }
+
+        public async Task<Article> UpdateArticleWithState(Article article)
+        {
+            // Здесь можно добавить логирование или другую функциональность прокси
+            Console.WriteLine($"Прокси: обновление статьи {article.Id} с состоянием {article.StateName}");
+
+            // Замер времени выполнения
+            var stopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                // Делегируем вызов реальному репозиторию
+                var result = await _repository.UpdateArticleWithState(article);
+                return result;
+            }
+            finally
+            {
+                stopwatch.Stop();
+                Console.WriteLine($"Прокси: обновление статьи с состоянием заняло {stopwatch.ElapsedMilliseconds} мс");
             }
         }
     }

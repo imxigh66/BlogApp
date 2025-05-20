@@ -20,6 +20,28 @@ namespace DataAccess.Repositories
             _context = context;
         }
 
+
+        
+        public async Task<Article> UpdateArticleWithState(Article article)
+        {
+            var existingArticle = await _context.Articles.FindAsync(article.Id);
+            if (existingArticle != null)
+            {
+                _context.Entry(existingArticle).CurrentValues.SetValues(article);
+
+                // Обновляем поля состояния
+                existingArticle.StateName = article.StateName;
+                existingArticle.StateReason = article.StateReason ?? string.Empty;
+                existingArticle.IsPublished = article.IsPublished;
+
+                await _context.SaveChangesAsync();
+
+                // Очищаем кэш
+                string cacheKey = $"article_{article.Id}";
+                CacheService.Instance.Remove(cacheKey);
+            }
+            return existingArticle;
+        }
         public async Task<Article> GetArticleById(int id)
         {
             // Пытаемся получить из кэша
@@ -30,16 +52,35 @@ namespace DataAccess.Repositories
             }
 
             // Если нет в кэше, запрашиваем из базы
-            var article = await _context.Articles.Include(a => a.Author).FirstOrDefaultAsync(a => a.Id == id);
+            var article = await _context.Articles
+                .Include(a => a.Author)
+                .FirstOrDefaultAsync(a => a.Id == id);
 
-            // Если нашли статью, кэшируем ее на 10 минут
+            // Если нашли статью, проверяем и устанавливаем значения по умолчанию при необходимости
             if (article != null)
             {
+                // Устанавливаем значения по умолчанию, если они NULL
+                if (article.StateName == null)
+                {
+                    article.StateName = article.IsPublished ? "Опубликована" : "Черновик";
+                }
+
+                if (article.StateReason == null)
+                {
+                    article.StateReason = string.Empty;
+                }
+
+                // Инициализируем состояние
+                article.GetState();
+
+                // Кэшируем
                 CacheService.Instance.Set(cacheKey, article, TimeSpan.FromMinutes(10));
             }
 
             return article;
         }
+
+
 
         public async Task<ICollection<Article>> GetAllArticle()
         {

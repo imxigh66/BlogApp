@@ -167,7 +167,76 @@ namespace MinimalAPI.EndpointDefinitions
                 });
             }).RequireAuthorization("Author")
             .DisableAntiforgery();
+
+            app.MapPost("api/articles/{id}/send-to-moderation", async (
+    int id,
+    IArticleRepository repository,
+    HttpContext context) =>
+            {
+                var article = await repository.GetArticleById(id);
+                if (article == null)
+                    return Results.NotFound();
+
+                try
+                {
+                    article.SendToModeration();
+                    await repository.UpdateArticleWithState(article);
+
+                    return Results.Ok(new
+                    {
+                        success = true,
+                        articleId = article.Id,
+                        state = article.StateName,
+                        message = $"Статья переведена в состояние '{article.StateName}'"
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(new { message = ex.Message });
+                }
+            }).RequireAuthorization("Author");
+
+            // Блокировка статьи
+            app.MapPost("api/articles/{id}/block", async (
+                int id,
+                BlockArticleCommand command,
+                IMediator mediator) =>
+            {
+                command.ArticleId = id;
+                try
+                {
+                    var result = await mediator.Send(command);
+                    return Results.Ok(result);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(new { message = ex.Message });
+                }
+            }).RequireAuthorization("Admin");
+
+            // Получение информации о состоянии статьи
+            app.MapGet("api/articles/{id}/state", async (
+                int id,
+                IArticleRepository repository) =>
+            {
+                var article = await repository.GetArticleById(id);
+                if (article == null)
+                    return Results.NotFound();
+
+                return Results.Ok(new
+                {
+                    id = article.Id,
+                    title = article.Title,
+                    state = article.StateName,
+                    reason = article.StateReason,
+                    canLike = article.CanLike(),
+                    canComment = article.CanComment(),
+                    canEdit = article.CanEdit()
+                });
+            });
         }
+
+
 
     }
 }

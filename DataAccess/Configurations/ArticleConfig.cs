@@ -18,6 +18,13 @@ namespace DataAccess.Configurations
 
             // Опционально: Индексы для быстрого поиска
             builder.HasIndex(a => a.CreatedAt);
+
+            builder.Property(a => a.StateName)
+       .HasDefaultValue("Черновик")
+       .IsRequired();
+
+            builder.Property(a => a.StateReason)
+                .HasDefaultValue(string.Empty);
         }
     }
 }
