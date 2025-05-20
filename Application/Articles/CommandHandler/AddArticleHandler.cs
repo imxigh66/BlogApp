@@ -32,7 +32,9 @@ namespace Application.Articles.CommandHandlers
                 Content = request.Content,
                 CreatedAt = DateTime.UtcNow,
                 AuthorId = request.AuthorId,
-                IsPublished = !request.NeedsModeration
+                IsPublished = !request.NeedsModeration,
+                StateName = !request.NeedsModeration ? "Опубликована" : "Черновик",
+                StateReason = string.Empty
             };
 
             // Используем репозиторий для добавления статьи

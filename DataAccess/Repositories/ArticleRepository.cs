@@ -87,8 +87,21 @@ namespace DataAccess.Repositories
             return await _context.Articles.Include(a => a.Author).Include(a => a.ContentItems).ToListAsync();
         }
 
+        // DataAccess/Repositories/ArticleRepository.cs
         public async Task<Article> AddArticle(Article article)
         {
+            // Убедимся, что состояние установлено правильно
+            if (string.IsNullOrEmpty(article.StateName))
+            {
+                article.StateName = article.IsPublished ? "Опубликована" : "Черновик";
+            }
+
+            // Убедимся, что StateReason не NULL
+            if (article.StateReason == null)
+            {
+                article.StateReason = string.Empty;
+            }
+
             _context.Articles.Add(article);
             await _context.SaveChangesAsync();
             return article;
@@ -113,12 +126,31 @@ namespace DataAccess.Repositories
         }
 
 
+        // DataAccess/Repositories/ArticleRepository.cs
         public async Task<ICollection<Article>> GetPendingArticles()
         {
-            return await _context.Articles
+            // Используем проекцию для создания объектов без NULL полей
+            var articles = await _context.Articles
                 .Where(a => !a.IsPublished)
                 .Include(a => a.Author)
+                .Select(a => new Article
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Content = a.Content,
+                    AuthorId = a.AuthorId,
+                    Author = a.Author,
+                    CreatedAt = a.CreatedAt,
+                    IsPublished = a.IsPublished,
+                    StateName = a.StateName == null ? "Черновик" : a.StateName,
+                    StateReason = a.StateReason == null ? "" : a.StateReason,
+                    Likes = a.Likes,
+                    Comments = a.Comments,
+                    ContentItems = a.ContentItems
+                })
                 .ToListAsync();
+
+            return articles;
         }
 
         public async Task UpdateArticleStatus(int articleId, bool isPublished)

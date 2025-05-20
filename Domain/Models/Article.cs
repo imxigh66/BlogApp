@@ -33,6 +33,8 @@ namespace Domain.Models
         public Article()
         {
             _state = new DraftState();
+            StateName = "Черновик";
+            StateReason = string.Empty;
         }
 
         // Метод для установки состояния
